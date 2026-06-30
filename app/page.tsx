@@ -1,6 +1,15 @@
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-export default function Home() {
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+
+export default async function Home() {
+  const supabase = await createClient();
+  // Auth decision uses getUser() (re-validates the token) — never getSession().
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
       <div className="flex flex-col items-center gap-6">
@@ -14,9 +23,29 @@ export default function Home() {
           Generate AI images, video, audio and 3D from one fast, asset-first
           studio. One tap to Burst.
         </p>
-        <Button size="lg" disabled>
-          Coming soon
-        </Button>
+
+        {user ? (
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-muted-foreground">
+              Signed in as{" "}
+              <span className="text-foreground">{user.email}</span>
+            </p>
+            <form action="/auth/signout" method="post">
+              <Button type="submit" variant="outline">
+                Sign out
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            <Button asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/signup">Sign up</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </main>
   );
